@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Ansible Galaxy collection packaging (`galaxy.yml`) under the `rayfish.iroh`
+  namespace, so the roles install via `ansible-galaxy collection install`.
+- CI job that builds the collection artifact on every push.
+- `SECURITY.md` with a vulnerability-reporting contact.
+
 ## [1.0.0] - 2026-06-25
 
 ### Added

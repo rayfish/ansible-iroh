@@ -32,6 +32,7 @@ Ansible roles and playbooks to deploy [`iroh-relay`](https://github.com/n0-compu
 - [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Contributing](#contributing)
+- [Releasing](#releasing)
 - [License](#license)
 
 ## Requirements
@@ -55,6 +56,30 @@ Architectures: `x86_64` (also reported as `amd64`) and `aarch64` (also `arm64`).
 
 Pick one of the following:
 
+### From Ansible Galaxy (recommended)
+
+Install the collection, then reference the roles by their fully qualified
+name (`rayfish.iroh.<role>`) from your own playbook:
+
+```bash
+ansible-galaxy collection install rayfish.iroh
+```
+
+```yaml
+# playbook.yml
+- hosts: relays
+  roles:
+    - rayfish.iroh.iroh_relay
+
+- hosts: dns
+  roles:
+    - rayfish.iroh.iroh_dns_server
+```
+
+```bash
+ansible-playbook -i inventory.ini playbook.yml
+```
+
 ### As a git checkout (development)
 
 ```bash
@@ -63,30 +88,9 @@ cd ansible-iroh
 ansible-playbook playbooks/site.yml
 ```
 
-### As standalone roles from Ansible Galaxy
-
-```bash
-ansible-galaxy install rayfish.iroh_relay
-ansible-galaxy install rayfish.iroh_dns_server
-```
-
-Then reference them in your own playbook:
-
-```yaml
-- hosts: iroh_relay
-  roles:
-    - role: rayfish.iroh_relay
-
-- hosts: iroh_dns
-  roles:
-    - role: rayfish.iroh_dns_server
-```
-
-### As a collection (after publishing)
-
-```bash
-ansible-galaxy collection install rayfish.iroh
-```
+The bundled `playbooks/site.yml`, `deploy_relay.yml`, and `deploy_dns.yml`
+reference the roles by short name and rely on `ansible.cfg` (`roles_path = ./roles`),
+so they run directly from a checkout.
 
 ## Quick start
 
@@ -346,6 +350,31 @@ Issues and pull requests are welcome. Before opening a PR:
 4. Don't introduce a dependency on Galaxy or the network from inside a role — keep roles self-contained.
 
 Roles follow the standard Ansible role directory layout ([reference](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)).
+
+## Releasing
+
+This repository is packaged as the `rayfish.iroh` Ansible Galaxy collection
+(`galaxy.yml`). To cut a release:
+
+1. Bump `version` in `galaxy.yml` and move the `[Unreleased]` entries in
+   `CHANGELOG.md` under the new version.
+2. Build the artifact (CI also does this on every push):
+
+   ```bash
+   ansible-galaxy collection build --output-path dist/
+   ```
+
+3. Publish to Galaxy with your API token (from <https://galaxy.ansible.com/me/preferences>):
+
+   ```bash
+   ansible-galaxy collection publish dist/rayfish-iroh-<version>.tar.gz --token <your-galaxy-token>
+   ```
+
+4. Tag the release: `git tag v<version> && git push --tags`.
+
+The `build_ignore` list in `galaxy.yml` keeps development-only files
+(`inventory/`, `group_vars/`, `tests/`, `ansible.cfg`, CI config) out of the
+published artifact.
 
 ## License
 

@@ -1,0 +1,44 @@
+---
+# Ansible Galaxy collection manifest for rayfish.iroh.
+# Build with: ansible-galaxy collection build
+# Publish with: ansible-galaxy collection publish ./rayfish-iroh-<version>.tar.gz --token <your-galaxy-token>
+namespace: rayfish
+name: iroh
+version: 1.0.0
+readme: README.md
+authors:
+  - Dario <dario@rayfish.xyz>
+description: >-
+  Ansible roles to deploy iroh-relay and iroh-dns-server from the
+  n0-computer/iroh project, with hardened systemd units.
+license:
+  - MIT
+  - Apache-2.0
+tags:
+  - iroh
+  - relay
+  - dns
+  - pkarr
+  - p2p
+  - networking
+  - systemd
+repository: https://github.com/rayfish/ansible-iroh
+documentation: https://github.com/rayfish/ansible-iroh#readme
+homepage: https://github.com/rayfish/ansible-iroh
+issues: https://github.com/rayfish/ansible-iroh/issues
+dependencies: {}
+
+# Files that are useful for local development / the git-clone workflow but
+# should not ship inside the published collection artifact.
+build_ignore:
+  - ansible.cfg
+  - inventory
+  - group_vars
+  - tests
+  - .github
+  - .ansible
+  - .ansible-lint
+  - .yamllint
+  - .gitignore
+  - .DS_Store
+  - "*.tar.gz"

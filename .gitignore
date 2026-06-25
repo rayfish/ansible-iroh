@@ -19,3 +19,9 @@ venv/
 
 # Molecule (not used currently, but reserve the dir)
 .molecule/
+
+# Ansible local artifacts
+.ansible/
+
+# Built collection artifacts
+*.tar.gz

@@ -68,3 +68,28 @@ jobs:
 
       - name: Render templates locally
         run: ansible-playbook tests/render.yml
+
+  build:
+    name: Build collection
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install "ansible-core>=2.15,<2.18"
+
+      - name: Build the rayfish.iroh collection
+        run: ansible-galaxy collection build --output-path dist/
+
+      - name: Upload collection artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rayfish-iroh-collection
+          path: dist/*.tar.gz

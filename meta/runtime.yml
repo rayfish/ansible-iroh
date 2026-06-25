@@ -1,0 +1,3 @@
+---
+# Minimum Ansible version required to use the rayfish.iroh collection.
+requires_ansible: ">=2.15.0"
