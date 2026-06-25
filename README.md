@@ -184,15 +184,82 @@ keyed_groups:
 > The prefix makes it sort last. Verify your groups with
 > `ansible-inventory --graph` before deploying.
 
-A cloud plugin can populate the groups directly instead, e.g. with `amazon.aws.aws_ec2`:
+A cloud plugin can populate the groups directly instead of going through
+`constructed`. See the worked AWS example below.
+
+### Example: clone and deploy to AWS EC2
+
+This walks through deploying straight from a checkout using EC2 dynamic
+inventory — no static host list.
+
+**1. Tag your instances.** Give each EC2 instance a tag `iroh_role` with the
+value `relay` or `dns`. That tag is what maps the instance into the right group.
+
+**2. Install the AWS plugin and its Python deps** on your control machine:
+
+```bash
+ansible-galaxy collection install amazon.aws
+pip install boto3 botocore
+```
+
+**3. Provide AWS credentials** the way boto3 expects — e.g. environment
+variables (or an `~/.aws/credentials` profile / an instance role):
+
+```bash
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_DEFAULT_REGION=us-east-1
+```
+
+**4. Clone the repo and add the inventory source:**
+
+```bash
+git clone https://github.com/rayfish/ansible-iroh.git
+cd ansible-iroh
+rm inventory/hosts.ini          # drop the static example
+```
+
+Create `inventory/aws_ec2.yml`:
 
 ```yaml
 # inventory/aws_ec2.yml
 plugin: amazon.aws.aws_ec2
-groups:
-  iroh_relay: "'relay' in (tags.iroh_role | default(''))"
-  iroh_dns:   "'dns' in (tags.iroh_role | default(''))"
+regions:
+  - us-east-1
+filters:
+  instance-state-name: running
+  # Only pull in instances tagged for iroh.
+  tag:iroh_role:
+    - relay
+    - dns
+# tag iroh_role=relay -> group "iroh_relay"; iroh_role=dns -> "iroh_dns".
+keyed_groups:
+  - key: tags.iroh_role
+    prefix: iroh
+    separator: "_"
+# Connect over the public IP (use private_ip_address inside a VPC/bastion).
+compose:
+  ansible_host: public_ip_address
 ```
+
+Set the SSH user for your AMI (e.g. `ubuntu`, `ec2-user`, `admin`) in
+`group_vars/all.yml`:
+
+```yaml
+ansible_user: ubuntu
+```
+
+**5. Confirm the groups resolve, then deploy:**
+
+```bash
+ansible-inventory --graph        # should list hosts under @iroh_relay / @iroh_dns
+ansible-playbook playbooks/site.yml
+```
+
+Because `ansible.cfg` loads the whole `inventory/` directory, the `aws_ec2.yml`
+source is picked up automatically — no `-i` flag needed. `site.yml` then runs
+the relay role on the `iroh_relay` hosts and the DNS role on the `iroh_dns`
+hosts.
 
 ## Configuration
 
