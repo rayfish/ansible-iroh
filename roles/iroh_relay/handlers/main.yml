@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart iroh-relay
+  ansible.builtin.systemd:
+    name: "{{ iroh_relay_service_name }}"
+    state: restarted

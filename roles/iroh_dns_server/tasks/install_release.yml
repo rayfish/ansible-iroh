@@ -1,0 +1,37 @@
+---
+- name: Download iroh-dns-server release tarball
+  ansible.builtin.get_url:
+    url: "{{ iroh_dns_tarball_url }}"
+    dest: "/tmp/{{ iroh_dns_release_basename }}.tar.gz"
+    mode: "0644"
+  register: _iroh_dns_download
+
+- name: Create temporary extraction directory
+  ansible.builtin.file:
+    path: "/tmp/{{ iroh_dns_release_basename }}"
+    state: directory
+    mode: "0755"
+
+- name: Extract iroh-dns-server release tarball
+  ansible.builtin.unarchive:
+    src: "{{ _iroh_dns_download.dest }}"
+    dest: "/tmp/{{ iroh_dns_release_basename }}"
+    remote_src: true
+
+- name: Install iroh-dns-server binary
+  ansible.builtin.copy:
+    src: "/tmp/{{ iroh_dns_release_basename }}/iroh-dns-server"
+    dest: "{{ iroh_dns_bin_dir }}/iroh-dns-server"
+    mode: "0755"
+    owner: root
+    group: root
+    remote_src: true
+  notify: Restart iroh-dns-server
+
+- name: Clean up temporary release files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/tmp/{{ iroh_dns_release_basename }}.tar.gz"
+    - "/tmp/{{ iroh_dns_release_basename }}"

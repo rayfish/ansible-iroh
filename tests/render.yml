@@ -1,0 +1,94 @@
+---
+- name: Render iroh config and systemd templates locally for inspection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Render iroh-relay config
+      ansible.builtin.template:
+        src: ../roles/iroh_relay/templates/config.toml.j2
+        dest: /tmp/iroh-relay-config.toml
+      vars:
+        iroh_relay_enable_relay: true
+        iroh_relay_http_bind_addr: "[::]:443"
+        iroh_relay_enable_metrics: true
+        iroh_relay_metrics_bind_addr: "[::]:9090"
+        iroh_relay_enable_quic_addr_discovery: true
+        iroh_relay_access: "everyone"
+        iroh_relay_tls: |
+          [tls]
+          cert_mode = "Manual"
+          manual_cert_path = "/etc/certs/relay.crt"
+          manual_key_path = "/etc/certs/relay.key"
+        iroh_relay_extra_config: ""
+
+    - name: Render iroh-relay systemd unit
+      ansible.builtin.template:
+        src: ../roles/iroh_relay/templates/iroh-relay.service.j2
+        dest: /tmp/iroh-relay.service
+      vars:
+        iroh_relay_user: "iroh-relay"
+        iroh_relay_group: "iroh-relay"
+        iroh_relay_bin_dir: "/usr/local/bin"
+        iroh_relay_config_dir: "/etc/iroh-relay"
+        iroh_relay_data_dir: "/var/lib/iroh-relay"
+        iroh_relay_service_name: "iroh-relay"
+        iroh_relay_dev_mode: false
+        iroh_relay_extra_args: ""
+
+    - name: Render iroh-dns-server config
+      ansible.builtin.template:
+        src: ../roles/iroh_dns_server/templates/config.toml.j2
+        dest: /tmp/iroh-dns-config.toml
+      vars:
+        iroh_dns_http_enabled: true
+        iroh_dns_http_port: 8080
+        iroh_dns_http_bind_addr: "0.0.0.0"
+        iroh_dns_https_enabled: true
+        iroh_dns_https_port: 443
+        iroh_dns_https_bind_addr: "0.0.0.0"
+        iroh_dns_https_domains:
+          - "irohdns.example.org"
+        iroh_dns_https_cert_mode: "lets_encrypt"
+        iroh_dns_https_letsencrypt_contact: "hostmaster@example.org"
+        iroh_dns_https_letsencrypt_prod: true
+        iroh_dns_port: 53
+        iroh_dns_bind_addr: "0.0.0.0"
+        iroh_dns_default_soa: >-
+          dns1.irohdns.example.org hostmaster.irohdns.example.org
+          0 10800 3600 604800 3600
+        iroh_dns_default_ttl: 300
+        iroh_dns_origins:
+          - "irohdns.example.org"
+          - "."
+        iroh_dns_rr_a: "192.0.2.10"
+        iroh_dns_rr_ns: "ns1.irohdns.example.org."
+        iroh_dns_metrics_disabled: false
+        iroh_dns_metrics_bind_addr: "127.0.1.1:9117"
+        iroh_dns_mainline_enabled: false
+        iroh_dns_mainline_bootstrap: []
+        iroh_dns_data_dir: "/var/lib/iroh-dns"
+        iroh_dns_extra_config: ""
+
+    - name: Render iroh-dns-server systemd unit
+      ansible.builtin.template:
+        src: ../roles/iroh_dns_server/templates/iroh-dns-server.service.j2
+        dest: /tmp/iroh-dns-server.service
+      vars:
+        iroh_dns_user: "iroh-dns"
+        iroh_dns_group: "iroh-dns"
+        iroh_dns_bin_dir: "/usr/local/bin"
+        iroh_dns_config_dir: "/etc/iroh-dns"
+        iroh_dns_data_dir: "/var/lib/iroh-dns"
+        iroh_dns_service_name: "iroh-dns-server"
+
+    - name: Clean up rendered files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/iroh-relay-config.toml
+        - /tmp/iroh-relay.service
+        - /tmp/iroh-dns-config.toml
+        - /tmp/iroh-dns-server.service

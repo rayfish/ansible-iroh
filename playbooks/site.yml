@@ -1,0 +1,12 @@
+---
+- name: Deploy iroh-relay and iroh-dns-server
+  hosts: iroh
+  become: true
+  gather_facts: true
+  roles:
+    - role: iroh_relay
+      when: "'iroh_relay' in group_names"
+      tags: [relay]
+    - role: iroh_dns_server
+      when: "'iroh_dns' in group_names"
+      tags: [dns]

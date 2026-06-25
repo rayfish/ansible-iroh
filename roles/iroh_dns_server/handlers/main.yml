@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart iroh-dns-server
+  ansible.builtin.systemd:
+    name: "{{ iroh_dns_service_name }}"
+    state: restarted

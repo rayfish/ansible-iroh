@@ -1,0 +1,39 @@
+---
+# Internal variables for iroh-relay.
+
+_iroh_relay_arch_map:
+  x86_64: "x86_64-unknown-linux-gnu"
+  amd64: "x86_64-unknown-linux-gnu"
+  aarch64: "aarch64-unknown-linux-gnu"
+  arm64: "aarch64-unknown-linux-gnu"
+
+iroh_relay_release_basename: >-
+  iroh-relay-v{{ iroh_relay_version }}-{{ iroh_relay_target }}
+iroh_relay_tarball_url: "https://github.com/n0-computer/iroh/releases/download/v{{ iroh_relay_version }}/{{ iroh_relay_release_basename }}.tar.gz"
+
+_iroh_relay_build_packages:
+  Debian:
+    - build-essential
+    - git
+    - curl
+    - ca-certificates
+    - pkg-config
+    - libssl-dev
+  RedHat:
+    - gcc
+    - gcc-c++
+    - make
+    - git
+    - curl
+    - ca-certificates
+    - pkgconfig
+    - openssl-devel
+  Suse:
+    - gcc
+    - gcc-c++
+    - make
+    - git
+    - curl
+    - ca-certificates
+    - pkg-config
+    - libopenssl-devel

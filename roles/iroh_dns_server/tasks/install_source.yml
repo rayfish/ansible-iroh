@@ -1,0 +1,61 @@
+---
+- name: Fail on unsupported OS family for source install
+  ansible.builtin.fail:
+    msg: >-
+      Unsupported OS family '{{ ansible_os_family }}' for source install.
+      Override _iroh_dns_build_packages or use release install.
+  when: ansible_os_family not in _iroh_dns_build_packages
+
+- name: Ensure build dependencies are present
+  ansible.builtin.package:
+    name: "{{ _iroh_dns_build_packages[ansible_os_family] }}"
+    state: present
+  when: ansible_os_family in _iroh_dns_build_packages
+
+- name: Set cargo binary path
+  ansible.builtin.set_fact:
+    _iroh_dns_cargo_bin: >-
+      {{ ansible_env.HOME | default('/root') }}/.cargo/bin/cargo
+
+- name: Check if cargo is installed
+  ansible.builtin.stat:
+    path: "{{ _iroh_dns_cargo_bin }}"
+  register: _iroh_dns_cargo_stat
+
+- name: Install Rust toolchain via rustup
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      curl --proto '=https' --tlsv1.2 -sSf \
+        https://sh.rustup.rs |
+        sh -s -- -y --default-toolchain stable
+    executable: /bin/bash
+  environment:
+    HOME: "{{ ansible_env.HOME | default('/root') }}"
+  when: not _iroh_dns_cargo_stat.stat.exists
+
+- name: Verify cargo works
+  ansible.builtin.command:
+    cmd: "{{ _iroh_dns_cargo_bin }} --version"
+  changed_when: false
+
+- name: Clone iroh source repository
+  ansible.builtin.git:
+    repo: "{{ iroh_dns_source_repo }}"
+    dest: "{{ iroh_dns_source_dir }}"
+    version: "{{ iroh_dns_source_version }}"
+    force: true
+    clone: true
+    update: true
+  register: _iroh_dns_git
+
+- name: Build and install iroh-dns-server from source
+  ansible.builtin.command:
+    cmd: >-
+      {{ _iroh_dns_cargo_bin }} install
+      --path ./iroh-dns-server
+      --root /usr/local
+      --locked
+    chdir: "{{ iroh_dns_source_dir }}"
+  when: _iroh_dns_git is changed
+  notify: Restart iroh-dns-server

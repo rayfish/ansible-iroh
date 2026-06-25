@@ -1,0 +1,92 @@
+---
+- name: Ensure runtime dependencies are present
+  ansible.builtin.package:
+    name:
+      - curl
+      - tar
+      - ca-certificates
+    state: present
+
+- name: Create iroh-relay group
+  ansible.builtin.group:
+    name: "{{ iroh_relay_group }}"
+    system: true
+
+- name: Create iroh-relay user
+  ansible.builtin.user:
+    name: "{{ iroh_relay_user }}"
+    group: "{{ iroh_relay_group }}"
+    home: "{{ iroh_relay_data_dir }}"
+    shell: "/usr/sbin/nologin"
+    system: true
+    createhome: false
+
+- name: Create config and data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ iroh_relay_user }}"
+    group: "{{ iroh_relay_group }}"
+    mode: "0755"
+  loop:
+    - "{{ iroh_relay_config_dir }}"
+    - "{{ iroh_relay_data_dir }}"
+
+- name: Determine Rust target triple
+  ansible.builtin.set_fact:
+    iroh_relay_target: >-
+      {{ iroh_relay_arch_target
+         | default(_iroh_relay_arch_map[ansible_architecture]) }}
+
+- name: Validate iroh_relay_install_method
+  ansible.builtin.assert:
+    that:
+      - iroh_relay_install_method in ["release", "source"]
+    msg: iroh_relay_install_method must be 'release' or 'source'.
+
+- name: Validate iroh_relay_access
+  ansible.builtin.assert:
+    that:
+      - iroh_relay_access in ["everyone", ""]
+    msg: >-
+      iroh_relay_access must be 'everyone' or '' (use iroh_relay_extra_config
+      for complex access blocks).
+
+- name: Validate iroh_relay_http_bind_addr
+  ansible.builtin.assert:
+    that:
+      - iroh_relay_http_bind_addr | length > 0
+    msg: iroh_relay_http_bind_addr must not be empty.
+
+- name: Include release install tasks
+  ansible.builtin.include_tasks: install_release.yml
+  when: iroh_relay_install_method == "release"
+
+- name: Include source install tasks
+  ansible.builtin.include_tasks: install_source.yml
+  when: iroh_relay_install_method == "source"
+
+- name: Install iroh-relay configuration
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ iroh_relay_config_dir }}/config.toml"
+    owner: "{{ iroh_relay_user }}"
+    group: "{{ iroh_relay_group }}"
+    mode: "0640"
+  notify: Restart iroh-relay
+
+- name: Install iroh-relay systemd service
+  ansible.builtin.template:
+    src: iroh-relay.service.j2
+    dest: "/etc/systemd/system/{{ iroh_relay_service_name }}.service"
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart iroh-relay
+
+- name: Enable and start iroh-relay
+  ansible.builtin.systemd:
+    name: "{{ iroh_relay_service_name }}"
+    state: started
+    enabled: true
+    daemon_reload: true

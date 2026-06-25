@@ -1,0 +1,87 @@
+---
+- name: Ensure runtime dependencies are present
+  ansible.builtin.package:
+    name:
+      - curl
+      - tar
+      - ca-certificates
+    state: present
+
+- name: Create iroh-dns group
+  ansible.builtin.group:
+    name: "{{ iroh_dns_group }}"
+    system: true
+
+- name: Create iroh-dns user
+  ansible.builtin.user:
+    name: "{{ iroh_dns_user }}"
+    group: "{{ iroh_dns_group }}"
+    home: "{{ iroh_dns_data_dir }}"
+    shell: "/usr/sbin/nologin"
+    system: true
+    createhome: false
+
+- name: Create config and data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ iroh_dns_user }}"
+    group: "{{ iroh_dns_group }}"
+    mode: "0755"
+  loop:
+    - "{{ iroh_dns_config_dir }}"
+    - "{{ iroh_dns_data_dir }}"
+
+- name: Determine Rust target triple
+  ansible.builtin.set_fact:
+    iroh_dns_target: >-
+      {{ iroh_dns_arch_target
+         | default(_iroh_dns_arch_map[ansible_architecture]) }}
+
+- name: Validate iroh_dns_install_method
+  ansible.builtin.assert:
+    that:
+      - iroh_dns_install_method in ["release", "source"]
+    msg: iroh_dns_install_method must be 'release' or 'source'.
+
+- name: Validate iroh_dns_https_cert_mode
+  ansible.builtin.assert:
+    that:
+      - not iroh_dns_https_enabled or
+        iroh_dns_https_cert_mode in ["self_signed", "manual", "lets_encrypt"]
+    msg: >-
+      iroh_dns_https_cert_mode must be 'self_signed', 'manual', or
+      'lets_encrypt' when HTTPS is enabled.
+
+- name: Include release install tasks
+  ansible.builtin.include_tasks: install_release.yml
+  when: iroh_dns_install_method == "release"
+
+- name: Include source install tasks
+  ansible.builtin.include_tasks: install_source.yml
+  when: iroh_dns_install_method == "source"
+
+- name: Install iroh-dns-server configuration
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ iroh_dns_config_dir }}/config.toml"
+    owner: "{{ iroh_dns_user }}"
+    group: "{{ iroh_dns_group }}"
+    mode: "0640"
+  notify: Restart iroh-dns-server
+
+- name: Install iroh-dns-server systemd service
+  ansible.builtin.template:
+    src: iroh-dns-server.service.j2
+    dest: "/etc/systemd/system/{{ iroh_dns_service_name }}.service"
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart iroh-dns-server
+
+- name: Enable and start iroh-dns-server
+  ansible.builtin.systemd:
+    name: "{{ iroh_dns_service_name }}"
+    state: started
+    enabled: true
+    daemon_reload: true

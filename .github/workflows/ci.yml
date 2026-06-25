@@ -1,0 +1,70 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install "ansible-core>=2.15,<2.18" "ansible-lint>=24,<26" "yamllint>=1.35,<2"
+
+      - name: ansible-lint
+        run: ansible-lint
+
+      - name: yamllint
+        run: yamllint .
+
+  syntax:
+    name: Syntax check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install "ansible-core>=2.15,<2.18"
+
+      - name: Syntax check playbooks
+        run: |
+          ansible-playbook --syntax-check playbooks/site.yml
+          ansible-playbook --syntax-check playbooks/deploy_relay.yml
+          ansible-playbook --syntax-check playbooks/deploy_dns.yml
+
+  render:
+    name: Render templates
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install "ansible-core>=2.15,<2.18"
+
+      - name: Render templates locally
+        run: ansible-playbook tests/render.yml

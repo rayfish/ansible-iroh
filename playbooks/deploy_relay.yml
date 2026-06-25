@@ -1,0 +1,8 @@
+---
+- name: Deploy iroh-relay
+  hosts: iroh_relay
+  become: true
+  gather_facts: true
+  roles:
+    - role: iroh_relay
+      tags: [relay]

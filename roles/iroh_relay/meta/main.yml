@@ -1,0 +1,26 @@
+---
+galaxy_info:
+  role_name: iroh_relay
+  author: Dario <dario@rayfish.xyz>
+  description: Deploy and configure the iroh-relay server.
+  license: MIT or Apache-2.0
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - all
+    - name: EL
+      versions:
+        - all
+    - name: opensuse
+      versions:
+        - all
+  galaxy_tags:
+    - iroh
+    - relay
+    - p2p
+    - networking
+    - systemd
+    - irohrelay
+
+dependencies: []

@@ -1,0 +1,61 @@
+---
+# Role defaults for iroh-dns-server.
+
+iroh_dns_version: "1.0.0"
+iroh_dns_install_method: "release"
+# Override to force a target triple (e.g. x86_64-unknown-linux-musl).
+iroh_dns_arch_target: ""
+
+iroh_dns_bin_dir: "/usr/local/bin"
+iroh_dns_config_dir: "/etc/iroh-dns"
+iroh_dns_data_dir: "/var/lib/iroh-dns"
+iroh_dns_user: "iroh-dns"
+iroh_dns_group: "iroh-dns"
+iroh_dns_service_name: "iroh-dns-server"
+
+# DNS listener.
+iroh_dns_port: 5300
+iroh_dns_bind_addr: "0.0.0.0"
+# Use a YAML folded scalar for the SOA string.
+iroh_dns_default_soa: >-
+  dns1.irohdns.example.org hostmaster.irohdns.example.org
+  0 10800 3600 604800 3600
+iroh_dns_default_ttl: 300
+iroh_dns_origins:
+  - "irohdns.example.org"
+  - "."
+### Optional apex records.
+iroh_dns_rr_a: ""
+iroh_dns_rr_ns: ""
+
+# HTTP PKARR / DOH listener.
+iroh_dns_http_enabled: true
+iroh_dns_http_port: 8080
+iroh_dns_http_bind_addr: "0.0.0.0"
+
+# HTTPS PKARR / DoH.
+iroh_dns_https_enabled: false
+iroh_dns_https_port: 8443
+iroh_dns_https_bind_addr: "0.0.0.0"
+iroh_dns_https_domains:
+  - "irohdns.example.org"
+# self_signed / manual / lets_encrypt
+iroh_dns_https_cert_mode: "lets_encrypt"
+iroh_dns_https_letsencrypt_contact: "hostmaster@example.org"
+iroh_dns_https_letsencrypt_prod: true
+
+# Metrics server.
+iroh_dns_metrics_disabled: false
+iroh_dns_metrics_bind_addr: "127.0.0.1:9117"
+
+# Mainline DHT fallback.
+iroh_dns_mainline_enabled: false
+iroh_dns_mainline_bootstrap: []
+
+# Raw TOML appended verbatim to the DNS config.
+iroh_dns_extra_config: ""
+
+# Build settings when installing from source.
+iroh_dns_source_repo: "https://github.com/n0-computer/iroh.git"
+iroh_dns_source_version: "v{{ iroh_dns_version }}"
+iroh_dns_source_dir: "/usr/local/src/iroh-dns-server"

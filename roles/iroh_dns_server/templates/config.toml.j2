@@ -1,0 +1,51 @@
+{# data_dir must appear before any table header to remain a top-level key. #}
+data_dir = "{{ iroh_dns_data_dir }}"
+
+{% if iroh_dns_http_enabled %}
+[http]
+port = {{ iroh_dns_http_port }}
+bind_addr = "{{ iroh_dns_http_bind_addr }}"
+{% endif %}
+
+{% if iroh_dns_https_enabled %}
+[https]
+port = {{ iroh_dns_https_port }}
+bind_addr = "{{ iroh_dns_https_bind_addr }}"
+domains = {{ iroh_dns_https_domains | to_json }}
+cert_mode = "{{ iroh_dns_https_cert_mode }}"
+{% if iroh_dns_https_cert_mode == 'lets_encrypt' %}
+letsencrypt_contact = "{{ iroh_dns_https_letsencrypt_contact }}"
+{% endif %}
+{% if iroh_dns_https_letsencrypt_prod is defined %}
+letsencrypt_prod = {{ iroh_dns_https_letsencrypt_prod | bool | lower }}
+{% endif %}
+{% endif %}
+
+[dns]
+port = {{ iroh_dns_port }}
+bind_addr = "{{ iroh_dns_bind_addr }}"
+default_soa = "{{ iroh_dns_default_soa }}"
+default_ttl = {{ iroh_dns_default_ttl }}
+origins = {{ iroh_dns_origins | to_json }}
+{% if iroh_dns_rr_a | length > 0 %}
+rr_a = "{{ iroh_dns_rr_a }}"
+{% endif %}
+{% if iroh_dns_rr_ns | length > 0 %}
+rr_ns = "{{ iroh_dns_rr_ns }}"
+{% endif %}
+
+[metrics]
+disabled = {{ iroh_dns_metrics_disabled | bool | lower }}
+{% if not iroh_dns_metrics_disabled and iroh_dns_metrics_bind_addr | length > 0 %}
+bind_addr = "{{ iroh_dns_metrics_bind_addr }}"
+{% endif %}
+
+[mainline]
+enabled = {{ iroh_dns_mainline_enabled | bool | lower }}
+{% if iroh_dns_mainline_enabled and iroh_dns_mainline_bootstrap | length > 0 %}
+bootstrap = {{ iroh_dns_mainline_bootstrap | to_json }}
+{% endif %}
+
+{% if iroh_dns_extra_config | length > 0 %}
+{{ iroh_dns_extra_config }}
+{% endif %}

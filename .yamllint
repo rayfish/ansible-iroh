@@ -1,0 +1,20 @@
+---
+# See https://docs.ansible.com/projects/lint/rules/yaml/
+# for the schema ansible-lint expects from .yamllint.
+extends: default
+
+rules:
+  line-length:
+    max: 160
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+  # Align with ansible-lint's expected yamllint settings.
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  braces:
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

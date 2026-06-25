@@ -1,0 +1,89 @@
+---
+# Global defaults for the iroh playbooks.
+# Override per-host or per-group as needed.
+
+# -----------------------------------------------------------------------------
+# iroh-relay
+# -----------------------------------------------------------------------------
+iroh_relay_version: "1.0.0"
+# Install from GitHub release tarball. Set to "source" to build from git.
+iroh_relay_install_method: "release"
+
+# Network / service defaults (unprivileged, change to 80/443 for production).
+iroh_relay_http_bind_addr: "[::]:3340"
+iroh_relay_enable_relay: true
+iroh_relay_enable_metrics: true
+iroh_relay_enable_quic_addr_discovery: false
+
+# Access control: "everyone", or supply the full access block via
+# iroh_relay_extra_config. Examples:
+# access = "everyone"
+# access.allowlist = ["abcd1234..."]
+# access.denylist  = ["abcd1234..."]
+# access.shared_token = ["my-secret-token"]
+# access.http.url = "https://auth.example.com/relay"
+# access.http.bearer_token = "service-to-service-secret"
+iroh_relay_access: "everyone"
+
+# Set metrics_bind_addr (e.g. "[::]:9090") or leave empty for the default.
+iroh_relay_metrics_bind_addr: "[::]:9090"
+
+# TLS / HTTPS / QUIC configuration. Supply as a raw TOML block.
+# Required if enable_quic_addr_discovery is true.
+iroh_relay_tls: ""
+# iroh_relay_tls: |
+#   [tls]
+#   cert_mode = "Manual"
+#   manual_cert_path = "/etc/letsencrypt/live/relay.example.com/fullchain.pem"
+#   manual_key_path = "/etc/letsencrypt/live/relay.example.com/privkey.pem"
+
+# Extra verbatim TOML appended at the end of the relay config.
+iroh_relay_extra_config: ""
+
+# -----------------------------------------------------------------------------
+# iroh-dns-server
+# -----------------------------------------------------------------------------
+iroh_dns_version: "1.0.0"
+iroh_dns_install_method: "release"
+
+# DNS listener. Port 53 requires CAP_NET_BIND_SERVICE, supplied by the systemd unit.
+iroh_dns_port: 5300
+iroh_dns_bind_addr: "0.0.0.0"
+iroh_dns_default_soa: >-
+  dns1.irohdns.example.org hostmaster.irohdns.example.org
+  0 10800 3600 604800 3600
+iroh_dns_default_ttl: 300
+iroh_dns_origins:
+  - "irohdns.example.org"
+  - "."
+# Optional apex records. Empty by default so no apex A/NS is published.
+# Uncomment and set real values to publish an apex record for your zone.
+iroh_dns_rr_a: ""
+iroh_dns_rr_ns: ""
+# iroh_dns_rr_a: "192.0.2.10"
+# iroh_dns_rr_ns: "ns1.irohdns.example.org."
+
+# HTTP API listener (disable by setting iroh_dns_http_enabled: false).
+iroh_dns_http_enabled: true
+iroh_dns_http_port: 8080
+iroh_dns_http_bind_addr: "0.0.0.0"
+
+# HTTPS listener / DNS-over-HTTPS.
+iroh_dns_https_enabled: false
+iroh_dns_https_port: 8443
+iroh_dns_https_bind_addr: "0.0.0.0"
+iroh_dns_https_domains:
+  - "irohdns.example.org"
+iroh_dns_https_cert_mode: "lets_encrypt"  # self_signed / manual / lets_encrypt
+iroh_dns_https_letsencrypt_contact: "hostmaster@example.org"
+iroh_dns_https_letsencrypt_prod: true
+
+# Metrics server.
+iroh_dns_metrics_disabled: false
+iroh_dns_metrics_bind_addr: "127.0.0.1:9117"
+
+# Mainline DHT fallback.
+iroh_dns_mainline_enabled: false
+
+# Extra verbatim TOML appended to the DNS config.
+iroh_dns_extra_config: ""

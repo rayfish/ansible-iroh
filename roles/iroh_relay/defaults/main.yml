@@ -1,0 +1,34 @@
+---
+# Role defaults for iroh-relay. Override in group_vars, host_vars, or playbooks.
+
+iroh_relay_version: "1.0.0"
+iroh_relay_install_method: "release"  # "release" or "source"
+# Override to force a target triple (e.g. x86_64-unknown-linux-musl).
+iroh_relay_arch_target: ""
+
+iroh_relay_bin_dir: "/usr/local/bin"
+iroh_relay_config_dir: "/etc/iroh-relay"
+iroh_relay_data_dir: "/var/lib/iroh-relay"
+iroh_relay_user: "iroh-relay"
+iroh_relay_group: "iroh-relay"
+iroh_relay_service_name: "iroh-relay"
+
+iroh_relay_dev_mode: false
+iroh_relay_http_bind_addr: "[::]:3340"
+iroh_relay_enable_relay: true
+iroh_relay_enable_metrics: true
+iroh_relay_metrics_bind_addr: ""
+iroh_relay_enable_quic_addr_discovery: false
+iroh_relay_access: "everyone"
+# Raw TOML block for the [tls] section.
+iroh_relay_tls: ""
+# Raw TOML block appended verbatim at the end of config.toml.
+iroh_relay_extra_config: ""
+
+# Build settings when installing from source.
+iroh_relay_source_repo: "https://github.com/n0-computer/iroh.git"
+iroh_relay_source_version: "v{{ iroh_relay_version }}"
+iroh_relay_source_dir: "/usr/local/src/iroh-relay"
+
+# Extra arguments passed to systemd unit; useful for --dev, etc.
+iroh_relay_extra_args: ""

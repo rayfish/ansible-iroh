@@ -1,0 +1,16 @@
+---
+# ansible-lint configuration for ansible-iroh.
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+profile: production
+
+exclude_paths:
+  - .github/
+  - tests/render.yml
+
+skip_list:
+  # Source installs use shell/command modules by design.
+  - no-changed-when
+  - no-handler
+  # Roles intentionally use iroh_relay_* / iroh_dns_* prefixes (not _server).
+  - var-naming[no-role-prefix]

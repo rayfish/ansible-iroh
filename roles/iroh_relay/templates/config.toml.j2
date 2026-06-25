@@ -1,0 +1,22 @@
+enable_relay = {{ iroh_relay_enable_relay | bool | lower }}
+http_bind_addr = "{{ iroh_relay_http_bind_addr }}"
+enable_metrics = {{ iroh_relay_enable_metrics | bool | lower }}
+enable_quic_addr_discovery = {{ iroh_relay_enable_quic_addr_discovery | bool | lower }}
+
+{# Metrics bind address is optional in the relay config. #}
+{% if iroh_relay_metrics_bind_addr | length > 0 %}
+metrics_bind_addr = "{{ iroh_relay_metrics_bind_addr }}"
+{% endif %}
+
+{# Access control is serialized inline. Set to "" and use extra_config for complex variants. #}
+{% if iroh_relay_access | length > 0 %}
+access = "{{ iroh_relay_access }}"
+{% endif %}
+
+{% if iroh_relay_tls | length > 0 %}
+{{ iroh_relay_tls }}
+{% endif %}
+
+{% if iroh_relay_extra_config | length > 0 %}
+{{ iroh_relay_extra_config }}
+{% endif %}

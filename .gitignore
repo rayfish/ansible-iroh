@@ -1,0 +1,21 @@
+# Ansible retry files
+*.retry
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Molecule (not used currently, but reserve the dir)
+.molecule/

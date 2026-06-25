@@ -1,0 +1,33 @@
+[Unit]
+Description=Iroh Relay Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ iroh_relay_user }}
+Group={{ iroh_relay_group }}
+Environment="RUST_LOG=info"
+Environment="RUST_BACKTRACE=1"
+ExecStart={{ iroh_relay_bin_dir }}/iroh-relay --config-path={{ iroh_relay_config_dir }}/config.toml{% if iroh_relay_dev_mode %} --dev{% endif %}{% if iroh_relay_extra_args %} {{ iroh_relay_extra_args }}{% endif %}
+Restart=on-failure
+RestartSec=5
+WorkingDirectory={{ iroh_relay_data_dir }}
+
+# Security hardening.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ iroh_relay_data_dir }} {{ iroh_relay_config_dir }}
+ReadOnlyPaths=-/etc/letsencrypt
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+PrivateTmp=true
+
+# Allow binding to privileged ports (< 1024) and port 443/80 if needed.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
