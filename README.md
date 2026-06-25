@@ -24,6 +24,7 @@ Ansible roles and playbooks to deploy [`iroh-relay`](https://github.com/n0-compu
 - [Supported platforms](#supported-platforms)
 - [Installation](#installation)
 - [Quick start](#quick-start)
+- [Dynamic inventory](#dynamic-inventory)
 - [Configuration](#configuration)
 - [Production example](#production-example)
 - [Service management](#service-management)
@@ -144,6 +145,54 @@ so they run directly from a checkout.
    > `host_key_checking` is enabled by default in `ansible.cfg`. If your target
    > hosts are not yet in `~/.ssh/known_hosts`, either SSH to them once manually
    > or run `ssh-keyscan -H <host> >> ~/.ssh/known_hosts` first.
+
+## Dynamic inventory
+
+The playbooks don't depend on the static `inventory/hosts.ini` — they target the
+groups **`iroh_relay`** and **`iroh_dns`**. That group membership is the only
+contract, so any inventory source works: a cloud plugin (`amazon.aws.aws_ec2`,
+`google.cloud.gcp_compute`, …), an inventory script, or the static file.
+
+`ansible.cfg` points `inventory` at the whole `inventory/` directory, so Ansible
+loads and **merges every source** in it. To use a dynamic source, just drop its
+config into `inventory/` alongside `hosts.ini` — no `-i` flag needed:
+
+```text
+inventory/
+  hosts.ini                  # static example (delete or keep)
+  aws_ec2.yml                # your cloud plugin config
+  zz_constructed.yml         # optional: map host vars -> iroh_* groups
+```
+
+The included `inventory/zz_constructed.yml.example` is a provider-agnostic
+template. Give each host an `iroh_role` of `relay` or `dns` (via a cloud tag,
+`host_vars/`, or `group_vars/`) and the `constructed` plugin places it in the
+right group:
+
+```yaml
+# inventory/zz_constructed.yml  (rename from the .example file)
+plugin: ansible.builtin.constructed
+strict: false
+keyed_groups:
+  - key: iroh_role        # iroh_role=relay -> group "iroh_relay"
+    prefix: iroh          # iroh_role=dns   -> group "iroh_dns"
+    separator: "_"
+```
+
+> The `zz_` prefix matters: a directory inventory is parsed alphabetically, and
+> `constructed` can only group hosts defined by sources parsed **before** it.
+> The prefix makes it sort last. Verify your groups with
+> `ansible-inventory --graph` before deploying.
+
+A cloud plugin can populate the groups directly instead, e.g. with `amazon.aws.aws_ec2`:
+
+```yaml
+# inventory/aws_ec2.yml
+plugin: amazon.aws.aws_ec2
+groups:
+  iroh_relay: "'relay' in (tags.iroh_role | default(''))"
+  iroh_dns:   "'dns' in (tags.iroh_role | default(''))"
+```
 
 ## Configuration
 

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Dynamic inventory support: `ansible.cfg` now loads the whole `inventory/`
+  directory (merging static and dynamic sources), with a provider-agnostic
+  `inventory/zz_constructed.yml.example` mapping an `iroh_role` host var to the
+  `iroh_relay` / `iroh_dns` groups, plus a README "Dynamic inventory" section.
 - Ansible Galaxy collection packaging (`galaxy.yml`) under the `rayfish.iroh`
   namespace, so the roles install via `ansible-galaxy collection install`.
 - CI job that builds the collection artifact on every push.

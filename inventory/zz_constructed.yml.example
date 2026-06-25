@@ -1,0 +1,32 @@
+# Generic dynamic-inventory example using the built-in `constructed` plugin.
+#
+# The iroh playbooks target the groups `iroh_relay` and `iroh_dns` — that is
+# the only contract. Any inventory source works as long as hosts land in those
+# groups. This file shows the provider-agnostic way to do that: tag each host
+# with an `iroh_role` variable and let `constructed` build the groups.
+#
+# To activate: rename this file to `zz_constructed.yml` (drop the .example
+# suffix). KEEP the `zz_` prefix.
+#
+#   Why the prefix? Ansible parses a directory inventory in ALPHABETICAL order,
+#   and `constructed` can only group hosts that were defined by sources parsed
+#   BEFORE it. The `zz_` prefix makes this file sort last, so it sees the hosts
+#   from hosts.ini / your cloud plugin and can group them. Without it,
+#   constructed runs first, sees no hosts, and builds nothing.
+#
+# Give every host an `iroh_role` of "relay" or "dns". You can set it from:
+#   - host_vars/<host>.yml or group_vars
+#   - a cloud inventory plugin's `compose:` mapping a tag to a var, e.g.
+#       compose:
+#         iroh_role: tags.iroh_role
+#   - the inventory file itself
+#
+# `keyed_groups` below turns iroh_role=relay into group "iroh_relay" and
+# iroh_role=dns into group "iroh_dns".
+---
+plugin: ansible.builtin.constructed
+strict: false
+keyed_groups:
+  - key: iroh_role
+    prefix: iroh
+    separator: "_"
