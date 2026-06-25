@@ -65,6 +65,19 @@ name (`rayfish.iroh.<role>`) from your own playbook:
 ansible-galaxy collection install rayfish.iroh
 ```
 
+Or pin it in a project's `requirements.yml` (recommended for reproducible runs):
+
+```yaml
+# requirements.yml
+collections:
+  - name: rayfish.iroh
+    version: ">=1.0.0"
+```
+
+```bash
+ansible-galaxy collection install -r requirements.yml
+```
+
 ```yaml
 # playbook.yml
 - hosts: relays
